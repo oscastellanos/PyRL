@@ -67,17 +67,17 @@ class CarVertical(Car):
 
         # scree.blit(self.image_vertical)
 
-
 class Lane():
-    def __init__(self, screen):
+    def __init__(self, screen, background):
         self.mean = 30
         self.std = 10
         self.cycle = 15
         self.vehicles_driving = []
         self.red_counter = 0
         self.count = 0
-        self.num_of_cars = .90
+        self.num_of_cars = .95
         self.screen = screen
+        self.background = background
 
     def generateVehicles(self):
         pass
@@ -90,11 +90,14 @@ class Lane():
         #self.car.draw(self.screen)
         for _ in self.vehicles_driving:
             _.draw()
-class WestLane(Lane):
-    def __init__(self, screen):
-        Lane.__init__(self, screen)
 
-    def populate(self):
+    def blit_background(self, position1, position2):
+        self.screen.blit(self.background, position1, position2)
+class WestLane(Lane):
+    def __init__(self, screen, background):
+        Lane.__init__(self, screen, background)
+
+    def generateVehicles(self):
         if np.random.rand() > self.num_of_cars:
             occupy = False
             for _ in self.vehicles_driving:
@@ -102,12 +105,34 @@ class WestLane(Lane):
                     occupy = True
                     break
             if occupy == False:
-                self.vehicles_driving.append(Car(600, 370, speed=-2, screen=screen))
+                self.vehicles_driving.append(Car(600, 370, speed=-2, screen=self.screen))
 
+    def update(self, light):
+        red_counter = 0
+        inbound_vehicles_driving = []
+        for o in self.vehicles_driving:
+            self.screen.blit(self.background, o.pos, o.pos)
+            if ((o.pos.right > 355) & (o.pos.right < 358) & ((light == 1) | (light == 2) | (light == 4))):
+                red_counter += 1
+            #            elif (o.pos.right > 355) & (o.pos.right < 358) & (next(traffic_obj)==2):
+            #                red_counter = red_counter + 1
+            else:
+                collision = False
+                for e in self.vehicles_driving:
+                    if (o.pos.left + o.speed < e.pos.right) & (o.pos.left > e.pos.left):
+                        collision = True
+                        break
+                if collision == False:
+                    o.move()
+
+            o.draw()
+            if o.pos.left < 622:
+                inbound_vehicles_driving.append(o)
+        self.vehicles_driving = inbound_vehicles_driving
 
 class EastLane(Lane):
-    def __init__(self, screen):
-        Lane.__init__(self, screen)
+    def __init__(self, screen, background):
+        Lane.__init__(self, screen, background)
 
     def generateVehicles(self):
         if np.random.rand() > self.num_of_cars:
@@ -120,52 +145,92 @@ class EastLane(Lane):
                 self.vehicles_driving.append(Car(0, 395, speed=2, screen=self.screen))
 
     def update(self, light):
+        red_counter = 0
+        inbound_vehicles_driving = []
         for o in self.vehicles_driving:
-            #screen.blit(background, o.pos, o.pos)
-            o.draw()
+            self.blit_background(o.pos, o.pos)
             if ((o.pos.right > 282) & (o.pos.right < 285) & ((light == 1) | (light == 2) | (light == 4))):
-                continue
+                red_counter += 1
             else:
                 collision = False
-
                 for e in self.vehicles_driving:
                     if (o.pos.right + o.speed > e.pos.left) & (o.pos.right < e.pos.right):
                         collision = True
                         break
                 if collision == False:
                     o.move()
-            #screen.blit(o.image, o.pos)
             o.draw()
             if o.pos.left < 622:
-                self.vehicles_driving.append(o)
+                inbound_vehicles_driving.append(o)
+        self.vehicles_driving = inbound_vehicles_driving
 
 class NorthLane(Lane):
-    def __init__(self, screen):
-        Lane.__init__(self, screen)
+    def __init__(self, screen, background):
+        Lane.__init__(self, screen, background)
 
     def generateVehicles(self):
         if np.random.rand() > self.num_of_cars:
             occupy = False
             for _ in self.vehicles_driving:
-                if _.pos.top <= 14:
+                if _.pos.top >= 729:
                     occupy = True
                     break
             if occupy == False:
-                self.vehicles_driving.append(CarVertical(325, 743, speed=-2, screen=screen))
+                self.vehicles_driving.append(CarVertical(325, 743, speed=-2, screen=self.screen))
+
+    def update(self, light):
+        red_counter = 0
+        inbound_vehicles_driving = []
+        for o in self.vehicles_driving:
+            self.blit_background(o.pos, o.pos)
+            if (o.pos.bottom > 419) & (o.pos.top < 419) & ((light == 0) | (light == 2) | (light == 4)):
+                red_counter += 1
+            else:
+                collision = False
+                for e in self.vehicles_driving:
+                    if (o.pos.top + o.speed-5 < e.pos.bottom) & (o.pos.top > e.pos.top):
+                        collision = True
+                        break
+                if collision == False:
+                    o.move()
+            o.draw()
+            if o.pos.top < 750:
+                inbound_vehicles_driving.append(o)
+        self.vehicles_driving = inbound_vehicles_driving
 
 class SouthLane(Lane):
-    def __init__(self, screen):
-        Lane.__init__(self, screen)
+    def __init__(self, screen, background):
+        Lane.__init__(self, screen, background)
 
     def generateVehicles(self):
         if np.random.rand() > self.num_of_cars:
             occupy = False
             for _ in self.vehicles_driving:
-                if _.pos.top <= 14:
+                if _.pos.top <= 15:
                     occupy = True
                     break
             if occupy == False:
-                self.vehicles_driving.append(CarVertical(295, 0, speed=2, screen=screen))
+                self.vehicles_driving.append(CarVertical(295, 0, speed=2, screen=self.screen))
+
+    def update(self, light):
+        red_counter = 0
+        inbound_vehicles_driving = []
+        for o in self.vehicles_driving:
+            self.blit_background(o.pos, o.pos)
+            if (o.pos.bottom > 350) & (o.pos.top < 350) & ((light == 0) | (light == 2) | (light == 4)):
+                red_counter += 1
+            else:
+                collision = False
+                for e in self.vehicles_driving:
+                    if (o.pos.bottom + o.speed+5 > e.pos.top) & (o.pos.bottom < e.pos.bottom):
+                        collision = True
+                        break
+                if collision == False:
+                    o.move()
+            o.draw()
+            if o.pos.top < 750:
+                inbound_vehicles_driving.append(o)
+        self.vehicles_driving = inbound_vehicles_driving
 
 class TrafficSignal:
     def __init__(self, screen):
@@ -179,10 +244,7 @@ class TrafficSignal:
         self.yellow_light = pygame.transform.scale(yellow_light, (75, 30))
         self.yv = pygame.transform.scale(yv, (30, 75))
         self.screen = screen
-        self.north = NorthLane(self.screen)
-        self.south = SouthLane(self.screen)
-        self.east = EastLane(self.screen)
-        self.west = WestLane(self.screen)
+
 
     def sequence(self):
         if self.light == 0:
@@ -223,13 +285,10 @@ class TrafficSignal:
             self.screen.blit(self.yv, (245, 285))
 
     def step(self):
-        self.east.generateVehicles()
-        self.east.update(self.currentSignal())
-        self.east.draw()
+        #self.east.generateVehicles()
+        #self.east.update(self.currentSignal())
+        #self.east.draw()
         self.draw()
-
-
-
 
 # TrafficSimulator is the container and controller class. Its constructor makes and embeds
 # instances of the car, traffic signal, and lane classes.
@@ -250,6 +309,10 @@ class TrafficSimulator:
         self.count = 0
         self.num_of_cars = .98
         self.signal_controller = TrafficSignal(self.screen)
+        self.north = NorthLane(self.screen, self.background)
+        self.south = SouthLane(self.screen, self.background)
+        self.east = EastLane(self.screen, self.background)
+        self.west = WestLane(self.screen, self.background)
 
     def draw(self):
         self.screen.blit(self.background, (0, 0))
@@ -294,14 +357,26 @@ class TrafficSimulator:
                 if key == self.actions["down"]:
                     self.action = 4
 
+    def display_update(self):
+        pygame.display.update()
+        pygame.time.delay(50)
+        
     def step(self):
         #dt /= 1000.0
-        self._handle_player_events()
+        self._handle_player_events() # gets which key the player hit
         self.signal_controller.act(self.action)
-        self.draw()
-        self.signal_controller.step()
+        self.draw() # draws the background
+        #self.signal_controller.step()
+        self.east.generateVehicles()
+        self.east.update(self.signal_controller.currentSignal())
+        self.west.generateVehicles()
+        self.west.update(self.signal_controller.currentSignal())
+        self.north.generateVehicles()
+        self.north.update(self.signal_controller.currentSignal())
+        self.south.generateVehicles()
+        self.south.update(self.signal_controller.currentSignal())
+        self.display_update()
         self.signal_controller.draw()
-
 
 # quick function to load an image
 def load_image(name):
@@ -319,12 +394,6 @@ def traffic_signal(red_time, green_time, yellow_time):
         for _ in range(yellow_time):
             yield 4
 
-def debug(count, traffic_obj, traffic_obj_vertical):
-    print("Count: " + str(count))
-    print("Horizontal:  " + str(traffic_obj) + "  Vertical:  " + str(traffic_obj_vertical))
-
-
-
 if __name__ == '__main__':
     pygame.init()
     game = TrafficSimulator(width=622, height=743)
@@ -333,10 +402,10 @@ if __name__ == '__main__':
     game.rng = np.random.RandomState(24)
     game.init()
 
-    while True:
+    while True:#
         #if game.game_over():
         #    game.init()
 
-        #dt = game.clock.tick_busy_loop(30)
-        game.step()
+        dt = game.clock.tick_busy_loop(30)
+        game.step(dt)
         pygame.display.update()
